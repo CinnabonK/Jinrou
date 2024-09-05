@@ -378,8 +378,8 @@
                 let wolfIndex;
                 do {
                     wolfIndex = Math.floor(Math.random() * players.length);
-                } while (roles[wolfIndex] === 'A');
-                roles[wolfIndex] = 'A';
+                } while (roles[wolfIndex] === '人狼');
+                roles[wolfIndex] = '';
                 werewolfNames.push(players[wolfIndex]);
             }
 
