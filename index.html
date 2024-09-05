@@ -47,9 +47,19 @@
             color: white;
         }
 
+        .role {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
         .theme {
             font-size: 20px;
             color: #555;
+        }
+
+        .next-player {
+            font-size: 20px;
+            color: #333;
         }
 
         h2 {
@@ -68,15 +78,15 @@
             <button onclick="startGame()" class="hidden" id="start-game-btn">ゲーム開始</button>
         </div>
 
-        <div id="role-section" class="hidden">
-            <p id="role-text" class="role"></p>
-            <p id="theme-text" class="theme"></p>
-            <button id="confirm-button" onclick="confirmRole()">わかった</button>
-        </div>
-
         <div id="ready-section" class="hidden">
+            <p id="next-player" class="next-player"></p>
             <p>準備OK?</p>
             <button onclick="showNextRole()">OK</button>
+        </div>
+
+        <div id="role-section" class="hidden">
+            <p id="theme-text" class="theme"></p>
+            <button id="confirm-button" onclick="confirmRole()">わかった</button>
         </div>
 
         <div id="vote-section" class="hidden">
@@ -100,8 +110,8 @@
         let werewolfNames = [];
         let selectedPlayers = new Set();  // 投票されたプレイヤーを追跡
 
-     const themes = [
-           { village: 'カレー', werewolf: 'ハヤシライス' },
+        const themes = [
+                  { village: 'カレー', werewolf: 'ハヤシライス' },
     { village: 'バター', werewolf: 'クリームチーズ' },
     { village: 'フライドチキン', werewolf: '焼き鳥' },
     { village: '焼きそばパン', werewolf: 'コロッケパン' },
@@ -342,8 +352,7 @@
     { village: 'チーズ', werewolf: 'ヨーグルト' },
     { village: '抹茶', werewolf: 'ほうじ茶' }
        
-];
-
+        ];
 
         function addPlayer() {
             const playerName = document.getElementById('player-name').value;
@@ -365,6 +374,7 @@
                 return;
             }
 
+            // ランダムに役職（村人/人狼）を割り当て
             const numWerewolves = Math.floor(players.length / 3);
             roles = Array(players.length).fill('村人');
             werewolfNames = [];
@@ -378,21 +388,24 @@
                 werewolfNames.push(players[wolfIndex]);
             }
 
+            // テーマをランダムに選択
             const randomTheme = themes[Math.floor(Math.random() * themes.length)];
             villageTheme = randomTheme.village;
             werewolfTheme = randomTheme.werewolf;
 
             document.getElementById('name-section').classList.add('hidden');
-            showNextRole();
+            document.getElementById('ready-section').classList.remove('hidden');
+
+            // 最初のプレイヤー名を表示
+            const nextPlayerName = players[currentPlayer];
+            document.getElementById('next-player').textContent = `${nextPlayerName}さんの番です。`;
         }
 
         function showNextRole() {
             if (currentPlayer < players.length) {
                 const role = roles[currentPlayer];
-                const playerName = players[currentPlayer];
                 const themeText = role === '人狼' ? werewolfTheme : villageTheme;
 
-                document.getElementById('role-text').textContent = `${playerName}さんの役職は「${role}」です。`;
                 document.getElementById('theme-text').textContent = `お題: ${themeText}`;
                 document.getElementById('role-section').classList.remove('hidden');
                 document.getElementById('ready-section').classList.add('hidden');
@@ -404,7 +417,15 @@
         function confirmRole() {
             document.getElementById('role-section').classList.add('hidden');
             document.getElementById('ready-section').classList.remove('hidden');
+
+            // 次のプレイヤー名を更新
             currentPlayer++;
+            if (currentPlayer < players.length) {
+                const nextPlayerName = players[currentPlayer];
+                document.getElementById('next-player').textContent = `${nextPlayerName}さんの番です。`;
+            } else {
+                prepareVoteSection();
+            }
         }
 
         function prepareVoteSection() {
