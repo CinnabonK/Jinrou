@@ -12,7 +12,22 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background-color: #f0f0f0; /* デフォルトの背景色 */
+            transition: background 1s ease; /* 背景変更の際のアニメーション */
+        }
+
+        /* 村人勝利時の背景（画像がない場合は青色にフォールバック） */
+        .village-win {
+            background-image: url('images/village-win.jpg');
+            background-size: cover;
+            background-color: lightblue; /* 画像がない場合に適用される色 */
+        }
+
+        /* 人狼勝利時の背景（画像がない場合は赤色にフォールバック） */
+        .werewolf-win {
+            background-image: url('images/werewolf-win.jpg');
+            background-size: cover;
+            background-color: lightcoral; /* 画像がない場合に適用される色 */
         }
 
         .container {
@@ -66,10 +81,32 @@
             font-size: 20px;
             margin-bottom: 20px;
         }
+
+        .final-theme {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        /* Smaller remove button */
+        .remove-button {
+            background-color: red;
+            color: white;
+            border: none;
+            font-size: 12px;
+            padding: 2px 5px;
+            margin-left: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .remove-button:hover {
+            background-color: darkred;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 名前入力セクション -->
         <div id="name-section">
             <h1>参加者の名前を入力してください</h1>
             <input type="text" id="player-name" placeholder="名前を入力" required>
@@ -78,25 +115,33 @@
             <button onclick="startGame()" class="hidden" id="start-game-btn">ゲーム開始</button>
         </div>
 
+        <!-- 次のプレイヤーに準備を促すセクション -->
         <div id="ready-section" class="hidden">
             <p id="next-player" class="next-player"></p>
             <p>準備OK?</p>
             <button onclick="showNextRole()">OK</button>
         </div>
 
+        <!-- 役職表示セクション -->
         <div id="role-section" class="hidden">
             <p id="theme-text" class="theme"></p>
             <button id="confirm-button" onclick="confirmRole()">わかった</button>
         </div>
 
+        <!-- 投票セクション -->
         <div id="vote-section" class="hidden">
             <h2>誰が人狼だったか投票してください</h2>
             <div id="vote-buttons"></div>
             <button onclick="checkResult()">投票結果を確認</button>
         </div>
 
+        <!-- 結果表示セクション -->
         <div id="final-result-section" class="hidden">
             <h2 id="final-result"></h2>
+            <div class="final-theme">
+                <p id="village-theme-text"></p>
+                <p id="werewolf-theme-text"></p>
+            </div>
             <button onclick="resetGame()">再対戦</button>
         </div>
     </div>
@@ -108,10 +153,10 @@
         let villageTheme = '';
         let werewolfTheme = '';
         let werewolfNames = [];
-        let selectedPlayers = new Set();  // 投票されたプレイヤーを追跡
-
+        let selectedPlayers = new Set();
+///ここにいっぱい書く
         const themes = [
-                  { village: 'カレー', werewolf: 'ハヤシライス' },
+        { village: 'カレー', werewolf: 'ハヤシライス' },
     { village: 'バター', werewolf: 'クリームチーズ' },
     { village: 'フライドチキン', werewolf: '焼き鳥' },
     { village: '焼きそばパン', werewolf: 'コロッケパン' },
@@ -359,12 +404,32 @@
             if (playerName) {
                 players.push(playerName);
                 document.getElementById('player-name').value = '';
-                const playerList = document.getElementById('player-list');
-                playerList.innerHTML += `<li>${playerName}</li>`;
+                updatePlayerList();
 
                 if (players.length >= 3) {
                     document.getElementById('start-game-btn').classList.remove('hidden');
                 }
+            }
+        }
+
+        function updatePlayerList() {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = '';
+            players.forEach((player, index) => {
+                playerList.innerHTML += `
+                    <li>
+                        ${player}
+                        <button class="remove-button" onclick="removePlayer(${index})">削除</button>
+                    </li>`;
+            });
+        }
+
+        function removePlayer(index) {
+            players.splice(index, 1);
+            updatePlayerList();
+
+            if (players.length < 3) {
+                document.getElementById('start-game-btn').classList.add('hidden');
             }
         }
 
@@ -374,7 +439,6 @@
                 return;
             }
 
-            // ランダムに役職（村人/人狼）を割り当て
             const numWerewolves = Math.floor(players.length / 3);
             roles = Array(players.length).fill('村人');
             werewolfNames = [];
@@ -388,7 +452,6 @@
                 werewolfNames.push(players[wolfIndex]);
             }
 
-            // テーマをランダムに選択
             const randomTheme = themes[Math.floor(Math.random() * themes.length)];
             villageTheme = randomTheme.village;
             werewolfTheme = randomTheme.werewolf;
@@ -396,7 +459,6 @@
             document.getElementById('name-section').classList.add('hidden');
             document.getElementById('ready-section').classList.remove('hidden');
 
-            // 最初のプレイヤー名を表示
             const nextPlayerName = players[currentPlayer];
             document.getElementById('next-player').textContent = `${nextPlayerName}さんの番です。`;
         }
@@ -418,11 +480,10 @@
             document.getElementById('role-section').classList.add('hidden');
             document.getElementById('ready-section').classList.remove('hidden');
 
-            // 次のプレイヤー名を更新
             currentPlayer++;
             if (currentPlayer < players.length) {
                 const nextPlayerName = players[currentPlayer];
-                document.getElementById('next-player').textContent = `${nextPlayerName}さんに変わってください。`;
+                document.getElementById('next-player').textContent = `${nextPlayerName}さんの番です。`;
             } else {
                 prepareVoteSection();
             }
@@ -456,21 +517,27 @@
         function checkResult() {
             const selectedWolves = Array.from(selectedPlayers);
             const finalResultText = document.getElementById('final-result');
+            const villageThemeText = document.getElementById('village-theme-text');
+            const werewolfThemeText = document.getElementById('werewolf-theme-text');
 
             const correct = werewolfNames.every(wolf => selectedWolves.includes(wolf)) && werewolfNames.length === selectedWolves.length;
 
             if (correct) {
                 finalResultText.textContent = `村人陣営勝利！人狼は ${werewolfNames.join(', ')} さんでした。`;
+                document.body.classList.add('village-win');  // 村人勝利時の背景を適用
             } else {
                 finalResultText.textContent = `村人陣営敗北... 人狼は ${werewolfNames.join(', ')} さんでした。`;
+                document.body.classList.add('werewolf-win');  // 人狼勝利時の背景を適用
             }
+
+            villageThemeText.textContent = `村人側のお題: ${villageTheme}`;
+            werewolfThemeText.textContent = `人狼側のお題: ${werewolfTheme}`;
 
             document.getElementById('vote-section').classList.add('hidden');
             document.getElementById('final-result-section').classList.remove('hidden');
         }
 
         function resetGame() {
-            players = [];
             roles = [];
             currentPlayer = 0;
             villageTheme = '';
@@ -478,14 +545,18 @@
             werewolfNames = [];
             selectedPlayers.clear();
 
-            document.getElementById('player-list').innerHTML = '';
+            document.body.classList.remove('village-win', 'werewolf-win');  // 背景をリセット
+            updatePlayerList();
             document.getElementById('vote-buttons').innerHTML = '';
             document.getElementById('final-result').textContent = '';
+            document.getElementById('village-theme-text').textContent = '';
+            document.getElementById('werewolf-theme-text').textContent = '';
 
             document.getElementById('name-section').classList.remove('hidden');
             document.getElementById('final-result-section').classList.add('hidden');
-            document.getElementById('start-game-btn').classList.add('hidden');
+            document.getElementById('start-game-btn').classList.remove('hidden');
         }
     </script>
 </body>
+
 </html>
